@@ -13,10 +13,26 @@
     "@typescript-eslint/eslint-plugin": "^2.18.0",
     "@typescript-eslint/parser": "^2.18.0",
     "eslint": "^6.8.0",
+    "husky": "^4.2.1",
+    "lint-staged": "^10.0.7",
     "parcel-bundler": "^1.12.4",
     "typescript": "^3.7.5"
   },
   "scripts": {
-    "start": "parcel index.html"
+    "start": "parcel serve public/index.html",
+    "typecheck": "tsc --project tsconfig.json #",
+    "lint:ts": "eslint ./src/**/*.tsx  --cache",
+    "lint:fix:ts": "yarn lint:ts --fix"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "yarn typecheck",
+      "yarn lint:fix:ts"
+    ]
   }
 }
