@@ -1,8 +1,6 @@
 import React, { useRef, useEffect, useCallback, useState } from "react";
-import { hsluvToRgb } from "hsluv";
+import { hsluvToHex } from "hsluv";
 import { css } from "@emotion/core";
-
-const range = (n: number) => Array.from({ length: n }, (v, k) => k);
 
 const vecToArg = (xy: [number, number]) => {
   const [x, y] = xy;
@@ -19,7 +17,7 @@ const useForceUpdate = () => {
 };
 
 export const App: React.FC = () => {
-  const [light, setLight] = useState(50);
+  const [light, setLight] = useState(80);
   const forceUpdate = useForceUpdate();
 
   const canvasRef = useRef(null);
@@ -28,33 +26,34 @@ export const App: React.FC = () => {
 
     return canvas.getContext("2d");
   };
+
   const width = 300;
   const height = 300;
+  const squareSize = 4;
+  const xmax = Math.floor(width / squareSize);
+  const ymax = Math.floor(height / squareSize);
 
   useEffect(() => {
     const ctx = getContext();
 
     // x: hue
     // y: saturation
-    range(width).forEach(x => {
-      range(height).forEach(y => {
-        const pv: [number, number] = [
-          x / (width / 2) - 1,
-          -y / (height / 2) + 1
-        ];
+    for (let x = 0; x < xmax; x++) {
+      for (let y = 0; y < ymax; y++) {
+        const pv: [number, number] = [x / (xmax / 2) - 1, -y / (ymax / 2) + 1];
         const pvSize = vecSize(pv);
-        if (pvSize <= 1.0) {
-          const h = vecToArg(pv);
-          const [r, g, b] = hsluvToRgb([h, pvSize * 100, light]);
 
-          ctx.fillStyle = `rgb(${r * 255}, ${g * 255}, ${b * 255})`;
-          ctx.fillRect(x, y, 1, 1);
-        }
-      });
-    });
+        ctx.fillStyle = hsluvToHex([
+          vecToArg(pv),
+          Math.min(pvSize * 100, 100),
+          light
+        ]);
+        ctx.fillRect(x * squareSize, y * squareSize, squareSize, squareSize);
+      }
+    }
 
     ctx.save();
-  }, [light]);
+  }, [light, xmax, ymax]);
 
   const handleChange = useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
@@ -87,7 +86,13 @@ export const App: React.FC = () => {
         >
           Light
         </label>
-        <input type="number" name="light" max={100} min={0} defaultValue={50} />
+        <input
+          type="number"
+          name="light"
+          max={100}
+          min={0}
+          defaultValue={light}
+        />
       </form>
     </>
   );
