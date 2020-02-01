@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useCallback, useState } from "react";
 import { hsluvToRgb } from "hsluv";
+import { css } from "@emotion/core";
 
 const range = (n: number) => Array.from({ length: n }, (v, k) => k);
 
@@ -72,8 +73,20 @@ export const App: React.FC = () => {
       <h1>LUV Color Picker</h1>
       <canvas width={width} height={height} ref={canvasRef} />
 
-      <form onChange={handleChange}>
-        <label htmlFor="light">Light</label>
+      <form
+        onChange={handleChange}
+        css={css`
+          margin: 1em 0;
+        `}
+      >
+        <label
+          htmlFor="light"
+          css={css`
+            margin-right: 0.5em;
+          `}
+        >
+          Light
+        </label>
         <input type="number" name="light" max={100} min={0} defaultValue={50} />
       </form>
     </>
