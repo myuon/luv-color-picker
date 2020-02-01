@@ -16,6 +16,10 @@ const useForceUpdate = () => {
   return setState;
 };
 
+const width = 300;
+const height = 300;
+const squareSize = 4;
+
 export const App: React.FC = () => {
   const [light, setLight] = useState(80);
   const forceUpdate = useForceUpdate();
@@ -27,9 +31,6 @@ export const App: React.FC = () => {
     return canvas.getContext("2d");
   };
 
-  const width = 300;
-  const height = 300;
-  const squareSize = 4;
   const xmax = Math.floor(width / squareSize);
   const ymax = Math.floor(height / squareSize);
 
@@ -70,7 +71,40 @@ export const App: React.FC = () => {
   return (
     <>
       <h1>LUV Color Picker</h1>
-      <canvas width={width} height={height} ref={canvasRef} />
+      <div
+        css={css`
+          position: relative;
+        `}
+      >
+        <canvas width={width} height={height} ref={canvasRef} />
+        <svg
+          width={width}
+          height={height}
+          css={css`
+            position: absolute;
+            top: 0;
+            left: 0;
+          `}
+        >
+          <circle
+            cx={width / 2}
+            cy={height / 2}
+            r={width / 2}
+            stroke="white"
+            strokeWidth={2}
+            fillOpacity={0}
+          />
+
+          <circle
+            cx={width / 2}
+            cy={height / 2}
+            r={2}
+            stroke="white"
+            strokeWidth={2}
+            fill="white"
+          />
+        </svg>
+      </div>
 
       <form
         onChange={handleChange}
