@@ -5,7 +5,7 @@ import React, {
   useState,
   useMemo
 } from "react";
-import { hsluvToHex } from "hsluv";
+import { hpluvToHex } from "hsluv";
 import { css } from "@emotion/core";
 import { Spectrum } from "./components/Spectrum";
 
@@ -30,10 +30,60 @@ const getContext = (ref: any): CanvasRenderingContext2D => {
   return canvas.getContext("2d");
 };
 
+type Harmonics =
+  | "single"
+  | "complementary"
+  | "analogous"
+  | "triad"
+  | "split-complementary"
+  | "tetradic"
+  | "square";
+
+const getHarmonicsValues = (type: Harmonics, value: number, max: number) => {
+  switch (type) {
+    case "single":
+      return [value];
+    case "complementary":
+      return [value, Math.floor(value + max / 2) % max];
+    case "analogous":
+      return [
+        Math.floor(value + (11 * max) / 12) % max,
+        value,
+        Math.floor(value + max / 12) % max
+      ];
+    case "triad":
+      return [
+        Math.floor(value + (2 * max) / 3) % max,
+        value,
+        Math.floor(value + max / 3) % max
+      ];
+    case "split-complementary":
+      return [
+        Math.floor(value + max / 2 + (2 * max) / 3) % max,
+        value,
+        Math.floor(value + max / 3) % max
+      ];
+    case "tetradic":
+      return [
+        value,
+        Math.floor(value + (max * 2) / 12) % max,
+        Math.floor(value + (max * 6) / 12) % max,
+        Math.floor(value + (max * 8) / 12) % max
+      ];
+    case "square":
+      return [
+        value,
+        Math.floor(value + (max * 3) / 12) % max,
+        Math.floor(value + (max * 6) / 12) % max,
+        Math.floor(value + (max * 9) / 12) % max
+      ];
+  }
+};
+
 export const App: React.FC = () => {
-  const [light, setLight] = useState(80);
   const [hue, setHue] = useState(0);
-  const [saturation, setSaturation] = useState(50);
+  const [saturation, setSaturation] = useState(100);
+  const [light, setLight] = useState(80);
 
   const canvasRef = useRef(null);
 
@@ -50,7 +100,7 @@ export const App: React.FC = () => {
         const pv: [number, number] = [x / (xmax / 2) - 1, -y / (ymax / 2) + 1];
         const pvSize = vecSize(pv);
 
-        ctx.fillStyle = hsluvToHex([
+        ctx.fillStyle = hpluvToHex([
           vecToArg(pv),
           Math.min(pvSize * 100, 100),
           light
@@ -67,7 +117,7 @@ export const App: React.FC = () => {
     const ctx = getContext(hueSpectrumCanvas);
 
     for (let x = 0; x < spectrumWidth; x++) {
-      ctx.fillStyle = hsluvToHex([
+      ctx.fillStyle = hpluvToHex([
         x * (360 / spectrumWidth),
         saturation,
         light
@@ -83,7 +133,7 @@ export const App: React.FC = () => {
     const ctx = getContext(saturationSpectrumCanvas);
 
     for (let x = 0; x < spectrumWidth; x++) {
-      ctx.fillStyle = hsluvToHex([hue, x * (100 / spectrumWidth), light]);
+      ctx.fillStyle = hpluvToHex([hue, x * (100 / spectrumWidth), light]);
       ctx.fillRect(x, 0, 1, spectrumHeight);
     }
 
@@ -95,7 +145,7 @@ export const App: React.FC = () => {
     const ctx = getContext(lightSpectrumCanvas);
 
     for (let x = 0; x < spectrumWidth; x++) {
-      ctx.fillStyle = hsluvToHex([hue, saturation, x * (100 / spectrumWidth)]);
+      ctx.fillStyle = hpluvToHex([hue, saturation, x * (100 / spectrumWidth)]);
       ctx.fillRect(x, 0, 1, spectrumHeight);
     }
 
@@ -111,7 +161,7 @@ export const App: React.FC = () => {
     ];
   }, [hue, saturation]);
   const pointingRgb = useMemo(() => {
-    return hsluvToHex([hue, saturation, light]);
+    return hpluvToHex([hue, saturation, light]);
   }, [hue, saturation, light]);
 
   const handleChangeHue = useCallback(value => {
@@ -124,9 +174,37 @@ export const App: React.FC = () => {
     setLight(Math.floor(value * 100));
   }, []);
 
+  const [harmonics, setHarmonics] = useState<Harmonics>("single");
+  const handleChangeHarmonics = useCallback(e => {
+    setHarmonics(e.currentTarget.value);
+  }, []);
+
+  const harmonicsColors = useMemo(() => {
+    return getHarmonicsValues(harmonics, hue, 360).map(h =>
+      hpluvToHex([h, saturation, light])
+    );
+  }, [harmonics, hue, saturation, light]);
+
+  const harmonicsColorPoints = useMemo(() => {
+    const scaler = (saturation / 100) * (width / 2);
+
+    return getHarmonicsValues(harmonics, hue, 360)
+      .filter(v => v != hue)
+      .map(h => [
+        width / 2 + scaler * Math.cos((h * Math.PI) / 180),
+        height / 2 - scaler * Math.sin((h * Math.PI) / 180)
+      ]);
+  }, [harmonics, hue, saturation]);
+
   return (
     <>
       <h1>LUV Color Picker</h1>
+
+      <h2>HPLuv Color Circle</h2>
+      <p>
+        <a href="http://www.hsluv.org/math/">http://www.hsluv.org/math/</a>
+      </p>
+
       <div
         css={css`
           position: relative;
@@ -168,6 +246,18 @@ export const App: React.FC = () => {
             strokeWidth={2}
             fillOpacity={0}
           />
+
+          {harmonicsColorPoints.map((p, i) => (
+            <circle
+              key={i}
+              cx={p[0]}
+              cy={p[1]}
+              r={5}
+              stroke="grey"
+              strokeWidth={2}
+              fillOpacity={0}
+            />
+          ))}
         </svg>
       </div>
 
@@ -205,7 +295,7 @@ export const App: React.FC = () => {
               <Spectrum
                 width={spectrumWidth}
                 anchorRef={lightSpectrumCanvas}
-                defaultValue={saturation / 100}
+                defaultValue={light / 100}
                 height={spectrumHeight}
                 onChange={handleChangeLight}
               />
@@ -227,6 +317,49 @@ export const App: React.FC = () => {
           </tr>
         </tbody>
       </table>
+
+      <div>
+        <header>
+          <h2>Color Harmonics</h2>
+        </header>
+        <p>
+          <a href="https://www.tigercolor.com/color-lab/color-theory/color-harmonies.htm">
+            https://www.tigercolor.com/color-lab/color-theory/color-harmonies.htm
+          </a>
+        </p>
+        <select
+          name="harmonics"
+          onChange={handleChangeHarmonics}
+          defaultValue={harmonics}
+        >
+          <option value="single">Single</option>
+          <option value="complementary">Complementary</option>
+          <option value="analogous">Analogous</option>
+          <option value="triad">Triad</option>
+          <option value="split-complementary">Split Complementary</option>
+          <option value="tetradic">Tetradic</option>
+          <option value="square">Square</option>
+        </select>
+
+        <div
+          css={css`
+            display: flex;
+          `}
+        >
+          {harmonicsColors.map((c, i) => (
+            <div
+              key={i}
+              css={css`
+                background-color: ${c};
+                width: 100px;
+                height: 100px;
+              `}
+            >
+              {c}
+            </div>
+          ))}
+        </div>
+      </div>
     </>
   );
 };
