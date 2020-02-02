@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useCallback, useState } from "react";
 import { hsluvToHex } from "hsluv";
 import { css } from "@emotion/core";
+import { Spectrum } from "./components/Spectrum";
 
 const vecToArg = (xy: [number, number]) => {
   const [x, y] = xy;
@@ -30,7 +31,7 @@ const getContext = (ref: any): CanvasRenderingContext2D => {
 export const App: React.FC = () => {
   const [light, setLight] = useState(80);
   const [hue, setHue] = useState(0);
-  const [saturation] = useState(50);
+  const [saturation, setSaturation] = useState(50);
   const forceUpdate = useForceUpdate();
 
   const canvasRef = useRef(null);
@@ -96,15 +97,6 @@ export const App: React.FC = () => {
     [forceUpdate]
   );
 
-  const handleHueSpectrumMouseMove = useCallback((e: React.MouseEvent) => {
-    if (e.buttons != 0) {
-      setHue(e.clientX - e.currentTarget.getBoundingClientRect().left);
-    }
-  }, []);
-  const handleHueSpectrumClick = useCallback((e: React.MouseEvent) => {
-    setHue(e.clientX - e.currentTarget.getBoundingClientRect().left);
-  }, []);
-
   return (
     <>
       <h1>LUV Color Picker</h1>
@@ -156,33 +148,12 @@ export const App: React.FC = () => {
         >
           Hue
         </p>
-        <div
-          css={css`
-            position: relative;
-          `}
-          onMouseMove={handleHueSpectrumMouseMove}
-          onClick={handleHueSpectrumClick}
-        >
-          <canvas width={360} height={spectrumHeight} ref={hueSpectrumCanvas} />
-          <svg
-            width={360}
-            height={spectrumHeight}
-            css={css`
-              position: absolute;
-              left: 0;
-            `}
-          >
-            <rect
-              x={hue}
-              y={0}
-              width={20}
-              height={spectrumHeight}
-              stroke="black"
-              strokeWidth={2}
-              fillOpacity={0}
-            ></rect>
-          </svg>
-        </div>
+        <Spectrum
+          anchorRef={hueSpectrumCanvas}
+          defaultValue={hue}
+          height={spectrumHeight}
+          onChange={setHue}
+        />
         <p>{hue}</p>
       </div>
       <div
@@ -198,35 +169,12 @@ export const App: React.FC = () => {
         >
           Saturation
         </p>
-        <div
-          css={css`
-            position: relative;
-          `}
-        >
-          <canvas
-            width={360}
-            height={spectrumHeight}
-            ref={saturationSpectrumCanvas}
-          />
-          <svg
-            width={360}
-            height={spectrumHeight}
-            css={css`
-              position: absolute;
-              left: 0;
-            `}
-          >
-            <rect
-              x={saturation}
-              y={0}
-              width={20}
-              height={spectrumHeight}
-              stroke="black"
-              strokeWidth={2}
-              fillOpacity={0}
-            ></rect>
-          </svg>
-        </div>
+        <Spectrum
+          anchorRef={saturationSpectrumCanvas}
+          defaultValue={saturation}
+          height={spectrumHeight}
+          onChange={setSaturation}
+        />
         <p>{saturation}</p>
       </div>
       <form
