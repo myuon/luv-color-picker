@@ -1,4 +1,10 @@
-import React, { useRef, useEffect, useCallback, useState } from "react";
+import React, {
+  useRef,
+  useEffect,
+  useCallback,
+  useState,
+  useMemo
+} from "react";
 import { hsluvToHex } from "hsluv";
 import { css } from "@emotion/core";
 import { Spectrum } from "./components/Spectrum";
@@ -97,6 +103,18 @@ export const App: React.FC = () => {
     [forceUpdate]
   );
 
+  const pointingPosition = useMemo(() => {
+    const scaler = (saturation / 100) * (width / 2);
+
+    return [
+      width / 2 + scaler * Math.cos((hue * Math.PI) / 180),
+      height / 2 - scaler * Math.sin((hue * Math.PI) / 180)
+    ];
+  }, [hue, saturation]);
+  const pointingRgb = useMemo(() => {
+    return hsluvToHex([hue, saturation, light]);
+  }, [hue, saturation, light]);
+
   return (
     <>
       <h1>LUV Color Picker</h1>
@@ -131,6 +149,15 @@ export const App: React.FC = () => {
             stroke="white"
             strokeWidth={2}
             fill="white"
+          />
+
+          <circle
+            cx={pointingPosition[0]}
+            cy={pointingPosition[1]}
+            r={5}
+            stroke="black"
+            strokeWidth={2}
+            fillOpacity={0}
           />
         </svg>
       </div>
@@ -201,6 +228,26 @@ export const App: React.FC = () => {
           />
         </div>
       </form>
+
+      <div
+        css={css`
+          display: flex;
+          margin: 1em 0;
+          & > div {
+            margin: 0 1em;
+          }
+        `}
+      >
+        <p>Color</p>
+        <div
+          css={css`
+            background-color: ${pointingRgb};
+            width: 100px;
+            height: 100px;
+          `}
+        ></div>
+        <p>{pointingRgb}</p>
+      </div>
     </>
   );
 };
