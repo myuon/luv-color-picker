@@ -31,6 +31,7 @@
   },
   "scripts": {
     "start": "parcel serve public/index.html",
+    "build": "parcel build public/index.html",
     "typecheck": "tsc --project tsconfig.json #",
     "lint:ts": "eslint ./src/**/*.tsx  --cache",
     "lint:fix:ts": "yarn lint:ts --fix"
