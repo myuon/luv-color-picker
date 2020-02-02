@@ -6,7 +6,7 @@ import React, {
   useMemo
 } from "react";
 import { hpluvToHex } from "hsluv";
-import { css } from "@emotion/core";
+import { css, Global } from "@emotion/core";
 import { Spectrum } from "./components/Spectrum";
 
 const vecToArg = (xy: [number, number]) => {
@@ -196,127 +196,225 @@ export const App: React.FC = () => {
       ]);
   }, [harmonics, hue, saturation]);
 
+  const [paletteSize, setPaletteSize] = useState(10);
+  const [saturationVariation, setSaturationVariation] = useState(100);
+  const [lightVariation, setLightVariation] = useState(40);
+  const paletteColors = useMemo(() => {
+    const colors = [];
+
+    for (let i = 0; i < paletteSize; i++) {
+      const row = [];
+      for (let j = 0; j < paletteSize; j++) {
+        row.push(
+          hpluvToHex([
+            Math.floor(hue + (360 / paletteSize) * (j - paletteSize / 2)) % 360,
+            Math.min(
+              Math.floor(
+                saturation +
+                  (saturationVariation / (paletteSize + 1)) *
+                    (i + 1 - paletteSize / 2)
+              ),
+              100
+            ),
+            Math.min(
+              Math.floor(
+                light -
+                  (lightVariation / (paletteSize + 1)) *
+                    (i + 1 - paletteSize / 2)
+              ),
+              100
+            )
+          ])
+        );
+      }
+      colors.push(row);
+    }
+
+    return colors;
+  }, [
+    hue,
+    saturation,
+    light,
+    paletteSize,
+    saturationVariation,
+    lightVariation
+  ]);
+
+  const handlePaletteFormChange = useCallback(
+    (event: React.FormEvent<HTMLFormElement>) => {
+      const form = new FormData(event.currentTarget);
+      const input = Object.fromEntries(form);
+
+      setPaletteSize(parseInt(input["palette-size"] as string, 10));
+      setLightVariation(parseInt(input["light-variation"] as string, 10));
+      setSaturationVariation(
+        parseInt(input["saturation-variation"] as string, 10)
+      );
+    },
+    []
+  );
+
   return (
     <>
-      <h1>LUV Color Picker</h1>
+      <Global
+        styles={css`
+          body {
+            width: 1024px;
+            margin: 0 auto;
+            padding: 2rem 0;
 
-      <h2>HPLuv Color Circle</h2>
-      <p>
-        <a href="http://www.hsluv.org/math/">http://www.hsluv.org/math/</a>
-      </p>
+            background-color: #f9f9f9;
+            color: #393939;
+          }
+
+          h2 {
+            font-size: larger;
+          }
+
+          a {
+            text-decoration: none;
+            color: #2d9455;
+          }
+        `}
+      />
+
+      <h1>LUV Color Picker</h1>
 
       <div
         css={css`
-          position: relative;
+          display: flex;
+
+          & > div {
+            margin-right: 4em;
+          }
         `}
       >
-        <canvas width={width} height={height} ref={canvasRef} />
-        <svg
-          width={width}
-          height={height}
-          css={css`
-            position: absolute;
-            top: 0;
-            left: 0;
-          `}
-        >
-          <circle
-            cx={width / 2}
-            cy={height / 2}
-            r={width / 2}
-            stroke="white"
-            strokeWidth={2}
-            fillOpacity={0}
-          />
+        <div>
+          <h2>HPLuv Color Circle</h2>
+          <p>
+            <a href="http://www.hsluv.org/math/">http://www.hsluv.org/math/</a>
+          </p>
 
-          <circle
-            cx={width / 2}
-            cy={height / 2}
-            r={2}
-            stroke="white"
-            strokeWidth={2}
-            fill="white"
-          />
+          <div
+            css={css`
+              position: relative;
+            `}
+          >
+            <canvas width={width} height={height} ref={canvasRef} />
+            <svg
+              width={width}
+              height={height}
+              css={css`
+                position: absolute;
+                top: 0;
+                left: 0;
+              `}
+            >
+              <circle
+                cx={width / 2}
+                cy={height / 2}
+                r={width / 2}
+                stroke="white"
+                strokeWidth={2}
+                fillOpacity={0}
+              />
 
-          <circle
-            cx={pointingPosition[0]}
-            cy={pointingPosition[1]}
-            r={5}
-            stroke="black"
-            strokeWidth={2}
-            fillOpacity={0}
-          />
+              <circle
+                cx={width / 2}
+                cy={height / 2}
+                r={2}
+                stroke="white"
+                strokeWidth={2}
+                fill="white"
+              />
 
-          {harmonicsColorPoints.map((p, i) => (
-            <circle
-              key={i}
-              cx={p[0]}
-              cy={p[1]}
-              r={5}
-              stroke="grey"
-              strokeWidth={2}
-              fillOpacity={0}
-            />
-          ))}
-        </svg>
+              <circle
+                cx={pointingPosition[0]}
+                cy={pointingPosition[1]}
+                r={5}
+                stroke="black"
+                strokeWidth={2}
+                fillOpacity={0}
+              />
+
+              {harmonicsColorPoints.map((p, i) => (
+                <circle
+                  key={i}
+                  cx={p[0]}
+                  cy={p[1]}
+                  r={5}
+                  stroke="grey"
+                  strokeWidth={2}
+                  fillOpacity={0}
+                />
+              ))}
+            </svg>
+          </div>
+        </div>
+
+        <div>
+          <header>
+            <h2>Color Adjustment</h2>
+          </header>
+
+          <table>
+            <tbody>
+              <tr>
+                <td>Hue</td>
+                <td>
+                  <Spectrum
+                    width={spectrumWidth}
+                    anchorRef={hueSpectrumCanvas}
+                    defaultValue={hue / 360}
+                    height={spectrumHeight}
+                    onChange={handleChangeHue}
+                  />
+                </td>
+                <td>{hue}</td>
+              </tr>
+              <tr>
+                <td>Saturation</td>
+                <td>
+                  <Spectrum
+                    width={spectrumWidth}
+                    anchorRef={saturationSpectrumCanvas}
+                    defaultValue={saturation / 100}
+                    height={spectrumHeight}
+                    onChange={handleChangeSaturation}
+                  />
+                </td>
+                <td>{saturation}</td>
+              </tr>
+              <tr>
+                <td>Light</td>
+                <td>
+                  <Spectrum
+                    width={spectrumWidth}
+                    anchorRef={lightSpectrumCanvas}
+                    defaultValue={light / 100}
+                    height={spectrumHeight}
+                    onChange={handleChangeLight}
+                  />
+                </td>
+                <td>{light}</td>
+              </tr>
+              <tr>
+                <td>Color</td>
+                <td>
+                  <div
+                    css={css`
+                      background-color: ${pointingRgb};
+                      width: 100px;
+                      height: 100px;
+                    `}
+                  />
+                </td>
+                <td>{pointingRgb}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-
-      <table>
-        <tbody>
-          <tr>
-            <td>Hue</td>
-            <td>
-              <Spectrum
-                width={spectrumWidth}
-                anchorRef={hueSpectrumCanvas}
-                defaultValue={hue / 360}
-                height={spectrumHeight}
-                onChange={handleChangeHue}
-              />
-            </td>
-            <td>{hue}</td>
-          </tr>
-          <tr>
-            <td>Saturation</td>
-            <td>
-              <Spectrum
-                width={spectrumWidth}
-                anchorRef={saturationSpectrumCanvas}
-                defaultValue={saturation / 100}
-                height={spectrumHeight}
-                onChange={handleChangeSaturation}
-              />
-            </td>
-            <td>{saturation}</td>
-          </tr>
-          <tr>
-            <td>Light</td>
-            <td>
-              <Spectrum
-                width={spectrumWidth}
-                anchorRef={lightSpectrumCanvas}
-                defaultValue={light / 100}
-                height={spectrumHeight}
-                onChange={handleChangeLight}
-              />
-            </td>
-            <td>{light}</td>
-          </tr>
-          <tr>
-            <td>Color</td>
-            <td>
-              <div
-                css={css`
-                  background-color: ${pointingRgb};
-                  width: 100px;
-                  height: 100px;
-                `}
-              />
-            </td>
-            <td>{pointingRgb}</td>
-          </tr>
-        </tbody>
-      </table>
 
       <div>
         <header>
@@ -359,6 +457,83 @@ export const App: React.FC = () => {
             </div>
           ))}
         </div>
+      </div>
+
+      <div>
+        <header>
+          <h2>Color Palette</h2>
+        </header>
+
+        <form onChange={handlePaletteFormChange}>
+          <table>
+            <tbody>
+              <tr>
+                <td>Palette Size</td>
+                <td>
+                  <input
+                    type="number"
+                    name="palette-size"
+                    defaultValue={paletteSize}
+                    min={1}
+                    max={100}
+                  />
+                </td>
+              </tr>
+              <tr>
+                <td>Saturation Variation</td>
+                <td>
+                  <input
+                    name="saturation-variation"
+                    type="number"
+                    defaultValue={saturationVariation}
+                    min={0}
+                    max={100}
+                  />
+                </td>
+              </tr>
+              <tr>
+                <td>Light Variation</td>
+                <td>
+                  <input
+                    name="light-variation"
+                    type="number"
+                    defaultValue={lightVariation}
+                    min={0}
+                    max={100}
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </form>
+
+        {paletteColors.map((row, i) => (
+          <div
+            key={i}
+            css={css`
+              display: flex;
+              flex-direction: row;
+              margin: -0.25em;
+
+              & > div {
+                margin: 0.25em;
+              }
+            `}
+          >
+            {row.map((color, i) => (
+              <div
+                key={i}
+                css={css`
+                  width: 100px;
+                  height: 50px;
+                  background-color: ${color};
+                `}
+              >
+                {color}
+              </div>
+            ))}
+          </div>
+        ))}
       </div>
     </>
   );
