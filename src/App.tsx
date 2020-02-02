@@ -72,6 +72,18 @@ export const App: React.FC = () => {
     ctx.save();
   }, [light, saturation]);
 
+  const saturationSpectrumCanvas = useRef(null);
+  useEffect(() => {
+    const ctx = getContext(saturationSpectrumCanvas);
+
+    for (let x = 0; x < 100; x++) {
+      ctx.fillStyle = hsluvToHex([hue, x, light]);
+      ctx.fillRect(x, 0, 1, spectrumHeight);
+    }
+
+    ctx.save();
+  }, [light, hue]);
+
   const handleChange = useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
@@ -84,7 +96,12 @@ export const App: React.FC = () => {
     [forceUpdate]
   );
 
-  const handleHueSpectrumClick = useCallback(e => {
+  const handleHueSpectrumMouseMove = useCallback((e: React.MouseEvent) => {
+    if (e.buttons != 0) {
+      setHue(e.clientX - e.currentTarget.getBoundingClientRect().left);
+    }
+  }, []);
+  const handleHueSpectrumClick = useCallback((e: React.MouseEvent) => {
     setHue(e.clientX - e.currentTarget.getBoundingClientRect().left);
   }, []);
 
@@ -143,6 +160,7 @@ export const App: React.FC = () => {
           css={css`
             position: relative;
           `}
+          onMouseMove={handleHueSpectrumMouseMove}
           onClick={handleHueSpectrumClick}
         >
           <canvas width={360} height={spectrumHeight} ref={hueSpectrumCanvas} />
@@ -166,6 +184,50 @@ export const App: React.FC = () => {
           </svg>
         </div>
         <p>{hue}</p>
+      </div>
+      <div
+        css={css`
+          display: flex;
+          margin: 1em 0;
+        `}
+      >
+        <p
+          css={css`
+            margin-right: 0.5em;
+          `}
+        >
+          Saturation
+        </p>
+        <div
+          css={css`
+            position: relative;
+          `}
+        >
+          <canvas
+            width={360}
+            height={spectrumHeight}
+            ref={saturationSpectrumCanvas}
+          />
+          <svg
+            width={360}
+            height={spectrumHeight}
+            css={css`
+              position: absolute;
+              left: 0;
+            `}
+          >
+            <rect
+              x={saturation}
+              y={0}
+              width={20}
+              height={spectrumHeight}
+              stroke="black"
+              strokeWidth={2}
+              fillOpacity={0}
+            ></rect>
+          </svg>
+        </div>
+        <p>{saturation}</p>
       </div>
       <form
         onChange={handleChange}
