@@ -82,8 +82,8 @@ const getHarmonicsValues = (type: Harmonics, value: number, max: number) => {
 
 export const App: React.FC = () => {
   const [hue, setHue] = useState(0);
-  const [saturation, setSaturation] = useState(100);
-  const [light, setLight] = useState(80);
+  const [saturation, setSaturation] = useState(80);
+  const [light, setLight] = useState(70);
 
   const canvasRef = useRef(null);
 
@@ -116,13 +116,13 @@ export const App: React.FC = () => {
   useEffect(() => {
     const ctx = getContext(hueSpectrumCanvas);
 
-    for (let x = 0; x < spectrumWidth; x++) {
+    for (let x = 0; x < spectrumWidth / squareSize; x++) {
       ctx.fillStyle = hpluvToHex([
-        x * (360 / spectrumWidth),
+        x * squareSize * (360 / spectrumWidth),
         saturation,
         light
       ]);
-      ctx.fillRect(x, 0, 1, spectrumHeight);
+      ctx.fillRect(x * squareSize, 0, squareSize, spectrumHeight);
     }
 
     ctx.save();
@@ -132,9 +132,13 @@ export const App: React.FC = () => {
   useEffect(() => {
     const ctx = getContext(saturationSpectrumCanvas);
 
-    for (let x = 0; x < spectrumWidth; x++) {
-      ctx.fillStyle = hpluvToHex([hue, x * (100 / spectrumWidth), light]);
-      ctx.fillRect(x, 0, 1, spectrumHeight);
+    for (let x = 0; x < spectrumWidth / squareSize; x++) {
+      ctx.fillStyle = hpluvToHex([
+        hue,
+        x * squareSize * (100 / spectrumWidth),
+        light
+      ]);
+      ctx.fillRect(x * squareSize, 0, squareSize, spectrumHeight);
     }
 
     ctx.save();
@@ -144,9 +148,13 @@ export const App: React.FC = () => {
   useEffect(() => {
     const ctx = getContext(lightSpectrumCanvas);
 
-    for (let x = 0; x < spectrumWidth; x++) {
-      ctx.fillStyle = hpluvToHex([hue, saturation, x * (100 / spectrumWidth)]);
-      ctx.fillRect(x, 0, 1, spectrumHeight);
+    for (let x = 0; x < spectrumWidth / squareSize; x++) {
+      ctx.fillStyle = hpluvToHex([
+        hue,
+        saturation,
+        x * squareSize * (100 / spectrumWidth)
+      ]);
+      ctx.fillRect(x * squareSize, 0, squareSize, spectrumHeight);
     }
 
     ctx.save();
@@ -197,8 +205,8 @@ export const App: React.FC = () => {
   }, [harmonics, hue, saturation]);
 
   const [paletteSize, setPaletteSize] = useState(10);
-  const [saturationVariation, setSaturationVariation] = useState(100);
-  const [lightVariation, setLightVariation] = useState(40);
+  const [saturationVariation, setSaturationVariation] = useState(50);
+  const [lightVariation, setLightVariation] = useState(55);
   const paletteColors = useMemo(() => {
     const colors = [];
 
