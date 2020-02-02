@@ -18,15 +18,10 @@ const vecToArg = (xy: [number, number]) => {
 const vecSize = (xy: [number, number]) =>
   Math.sqrt(xy[0] * xy[0] + xy[1] * xy[1]);
 
-const useForceUpdate = () => {
-  const [, setState] = useState();
-  return setState;
-};
-
 const width = 300;
 const height = 300;
 const squareSize = 4;
-const spectrumHeight = 50;
+const spectrumHeight = 30;
 const spectrumWidth = 300;
 
 const getContext = (ref: any): CanvasRenderingContext2D => {
@@ -39,7 +34,6 @@ export const App: React.FC = () => {
   const [light, setLight] = useState(80);
   const [hue, setHue] = useState(0);
   const [saturation, setSaturation] = useState(50);
-  const forceUpdate = useForceUpdate();
 
   const canvasRef = useRef(null);
 
@@ -96,17 +90,17 @@ export const App: React.FC = () => {
     ctx.save();
   }, [light, hue]);
 
-  const handleChange = useCallback(
-    (event: React.FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
+  const lightSpectrumCanvas = useRef(null);
+  useEffect(() => {
+    const ctx = getContext(lightSpectrumCanvas);
 
-      const form = new FormData(event.currentTarget);
-      const input = Object.fromEntries(form);
-      setLight(parseInt(input["light"] as string, 10));
-      forceUpdate(true);
-    },
-    [forceUpdate]
-  );
+    for (let x = 0; x < spectrumWidth; x++) {
+      ctx.fillStyle = hsluvToHex([hue, saturation, x * (100 / spectrumWidth)]);
+      ctx.fillRect(x, 0, 1, spectrumHeight);
+    }
+
+    ctx.save();
+  }, [hue, saturation]);
 
   const pointingPosition = useMemo(() => {
     const scaler = (saturation / 100) * (width / 2);
@@ -121,10 +115,13 @@ export const App: React.FC = () => {
   }, [hue, saturation, light]);
 
   const handleChangeHue = useCallback(value => {
-    setHue(value * 360);
+    setHue(Math.floor(value * 360));
   }, []);
   const handleChangeSaturation = useCallback(value => {
-    setSaturation(value * 100);
+    setSaturation(Math.floor(value * 100));
+  }, []);
+  const handleChangeLight = useCallback(value => {
+    setLight(Math.floor(value * 100));
   }, []);
 
   return (
@@ -174,94 +171,62 @@ export const App: React.FC = () => {
         </svg>
       </div>
 
-      <div
-        css={css`
-          display: flex;
-          margin: 1em 0;
-        `}
-      >
-        <p
-          css={css`
-            margin-right: 0.5em;
-          `}
-        >
-          Hue
-        </p>
-        <Spectrum
-          width={spectrumWidth}
-          anchorRef={hueSpectrumCanvas}
-          defaultValue={hue / 360}
-          height={spectrumHeight}
-          onChange={handleChangeHue}
-        />
-        <p>{hue}</p>
-      </div>
-      <div
-        css={css`
-          display: flex;
-          margin: 1em 0;
-        `}
-      >
-        <p
-          css={css`
-            margin-right: 0.5em;
-          `}
-        >
-          Saturation
-        </p>
-        <Spectrum
-          width={spectrumWidth}
-          anchorRef={saturationSpectrumCanvas}
-          defaultValue={saturation / 100}
-          height={spectrumHeight}
-          onChange={handleChangeSaturation}
-        />
-        <p>{saturation}</p>
-      </div>
-      <form
-        onChange={handleChange}
-        css={css`
-          margin: 1em 0;
-        `}
-      >
-        <div>
-          <label
-            htmlFor="light"
-            css={css`
-              margin-right: 0.5em;
-            `}
-          >
-            Light
-          </label>
-          <input
-            type="number"
-            name="light"
-            max={100}
-            min={0}
-            defaultValue={light}
-          />
-        </div>
-      </form>
-
-      <div
-        css={css`
-          display: flex;
-          margin: 1em 0;
-          & > div {
-            margin: 0 1em;
-          }
-        `}
-      >
-        <p>Color</p>
-        <div
-          css={css`
-            background-color: ${pointingRgb};
-            width: 100px;
-            height: 100px;
-          `}
-        ></div>
-        <p>{pointingRgb}</p>
-      </div>
+      <table>
+        <tbody>
+          <tr>
+            <td>Hue</td>
+            <td>
+              <Spectrum
+                width={spectrumWidth}
+                anchorRef={hueSpectrumCanvas}
+                defaultValue={hue / 360}
+                height={spectrumHeight}
+                onChange={handleChangeHue}
+              />
+            </td>
+            <td>{hue}</td>
+          </tr>
+          <tr>
+            <td>Saturation</td>
+            <td>
+              <Spectrum
+                width={spectrumWidth}
+                anchorRef={saturationSpectrumCanvas}
+                defaultValue={saturation / 100}
+                height={spectrumHeight}
+                onChange={handleChangeSaturation}
+              />
+            </td>
+            <td>{saturation}</td>
+          </tr>
+          <tr>
+            <td>Light</td>
+            <td>
+              <Spectrum
+                width={spectrumWidth}
+                anchorRef={lightSpectrumCanvas}
+                defaultValue={saturation / 100}
+                height={spectrumHeight}
+                onChange={handleChangeLight}
+              />
+            </td>
+            <td>{light}</td>
+          </tr>
+          <tr>
+            <td>Color</td>
+            <td>
+              <div
+                css={css`
+                  background-color: ${pointingRgb};
+                  width: 100px;
+                  height: 100px;
+                `}
+              />
+            </td>
+            <td>{pointingRgb}</td>
+          </tr>
+        </tbody>
+      </table>
     </>
   );
 };

@@ -48,9 +48,9 @@ export const Spectrum: React.FC<{
         `}
       >
         <rect
-          x={value - 10}
+          x={value - 5}
           y={0}
-          width={20}
+          width={10}
           height={props.height}
           stroke="black"
           strokeWidth={2}
