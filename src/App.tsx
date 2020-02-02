@@ -19,23 +19,27 @@ const useForceUpdate = () => {
 const width = 300;
 const height = 300;
 const squareSize = 4;
+const spectrumHeight = 50;
+
+const getContext = (ref: any): CanvasRenderingContext2D => {
+  const canvas = ref.current as any;
+
+  return canvas.getContext("2d");
+};
 
 export const App: React.FC = () => {
   const [light, setLight] = useState(80);
+  const [hue, setHue] = useState(0);
+  const [saturation] = useState(50);
   const forceUpdate = useForceUpdate();
 
   const canvasRef = useRef(null);
-  const getContext = (): CanvasRenderingContext2D => {
-    const canvas = canvasRef.current as any;
-
-    return canvas.getContext("2d");
-  };
 
   const xmax = Math.floor(width / squareSize);
   const ymax = Math.floor(height / squareSize);
 
   useEffect(() => {
-    const ctx = getContext();
+    const ctx = getContext(canvasRef);
 
     // x: hue
     // y: saturation
@@ -56,6 +60,18 @@ export const App: React.FC = () => {
     ctx.save();
   }, [light, xmax, ymax]);
 
+  const hueSpectrumCanvas = useRef(null);
+  useEffect(() => {
+    const ctx = getContext(hueSpectrumCanvas);
+
+    for (let x = 0; x < 360; x++) {
+      ctx.fillStyle = hsluvToHex([x, saturation, light]);
+      ctx.fillRect(x, 0, 1, spectrumHeight);
+    }
+
+    ctx.save();
+  }, [light, saturation]);
+
   const handleChange = useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
@@ -67,6 +83,10 @@ export const App: React.FC = () => {
     },
     [forceUpdate]
   );
+
+  const handleHueSpectrumClick = useCallback(e => {
+    setHue(e.clientX - e.currentTarget.getBoundingClientRect().left);
+  }, []);
 
   return (
     <>
@@ -106,27 +126,70 @@ export const App: React.FC = () => {
         </svg>
       </div>
 
+      <div
+        css={css`
+          display: flex;
+          margin: 1em 0;
+        `}
+      >
+        <p
+          css={css`
+            margin-right: 0.5em;
+          `}
+        >
+          Hue
+        </p>
+        <div
+          css={css`
+            position: relative;
+          `}
+          onClick={handleHueSpectrumClick}
+        >
+          <canvas width={360} height={spectrumHeight} ref={hueSpectrumCanvas} />
+          <svg
+            width={360}
+            height={spectrumHeight}
+            css={css`
+              position: absolute;
+              left: 0;
+            `}
+          >
+            <rect
+              x={hue}
+              y={0}
+              width={20}
+              height={spectrumHeight}
+              stroke="black"
+              strokeWidth={2}
+              fillOpacity={0}
+            ></rect>
+          </svg>
+        </div>
+        <p>{hue}</p>
+      </div>
       <form
         onChange={handleChange}
         css={css`
           margin: 1em 0;
         `}
       >
-        <label
-          htmlFor="light"
-          css={css`
-            margin-right: 0.5em;
-          `}
-        >
-          Light
-        </label>
-        <input
-          type="number"
-          name="light"
-          max={100}
-          min={0}
-          defaultValue={light}
-        />
+        <div>
+          <label
+            htmlFor="light"
+            css={css`
+              margin-right: 0.5em;
+            `}
+          >
+            Light
+          </label>
+          <input
+            type="number"
+            name="light"
+            max={100}
+            min={0}
+            defaultValue={light}
+          />
+        </div>
       </form>
     </>
   );
