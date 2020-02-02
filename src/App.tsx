@@ -283,25 +283,35 @@ export const App: React.FC = () => {
             text-decoration: none;
             color: #2d9455;
           }
+
+          p.caption {
+            font-size: smaller;
+          }
+
+          section {
+            margin-bottom: 3rem;
+          }
         `}
       />
 
-      <h1>LUV Color Picker</h1>
+      <hgroup>
+        <h1>LUV Color Picker</h1>
+        <p className="caption">
+          <a href="https://github.com/myuon/luv-color-picker">GitHub</a>
+        </p>
+      </hgroup>
 
       <div
         css={css`
           display: flex;
 
-          & > div {
+          & > section {
             margin-right: 4em;
           }
         `}
       >
-        <div>
+        <section>
           <h2>HPLuv Color Circle</h2>
-          <p>
-            <a href="http://www.hsluv.org/math/">http://www.hsluv.org/math/</a>
-          </p>
 
           <div
             css={css`
@@ -358,9 +368,13 @@ export const App: React.FC = () => {
               ))}
             </svg>
           </div>
-        </div>
 
-        <div>
+          <p className="caption">
+            <a href="http://www.hsluv.org/math/">http://www.hsluv.org/math/</a>
+          </p>
+        </section>
+
+        <section>
           <header>
             <h2>Color Adjustment</h2>
           </header>
@@ -421,18 +435,13 @@ export const App: React.FC = () => {
               </tr>
             </tbody>
           </table>
-        </div>
+        </section>
       </div>
 
-      <div>
+      <section>
         <header>
           <h2>Color Harmonics</h2>
         </header>
-        <p>
-          <a href="https://www.tigercolor.com/color-lab/color-theory/color-harmonies.htm">
-            https://www.tigercolor.com/color-lab/color-theory/color-harmonies.htm
-          </a>
-        </p>
         <select
           name="harmonics"
           onChange={handleChangeHarmonics}
@@ -465,9 +474,15 @@ export const App: React.FC = () => {
             </div>
           ))}
         </div>
-      </div>
 
-      <div>
+        <p className="caption">
+          <a href="https://www.tigercolor.com/color-lab/color-theory/color-harmonies.htm">
+            https://www.tigercolor.com/color-lab/color-theory/color-harmonies.htm
+          </a>
+        </p>
+      </section>
+
+      <section>
         <header>
           <h2>Color Palette</h2>
         </header>
@@ -542,7 +557,7 @@ export const App: React.FC = () => {
             ))}
           </div>
         ))}
-      </div>
+      </section>
     </>
   );
 };
