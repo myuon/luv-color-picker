@@ -27,6 +27,7 @@ const width = 300;
 const height = 300;
 const squareSize = 4;
 const spectrumHeight = 50;
+const spectrumWidth = 300;
 
 const getContext = (ref: any): CanvasRenderingContext2D => {
   const canvas = ref.current as any;
@@ -71,8 +72,12 @@ export const App: React.FC = () => {
   useEffect(() => {
     const ctx = getContext(hueSpectrumCanvas);
 
-    for (let x = 0; x < 360; x++) {
-      ctx.fillStyle = hsluvToHex([x, saturation, light]);
+    for (let x = 0; x < spectrumWidth; x++) {
+      ctx.fillStyle = hsluvToHex([
+        x * (360 / spectrumWidth),
+        saturation,
+        light
+      ]);
       ctx.fillRect(x, 0, 1, spectrumHeight);
     }
 
@@ -83,8 +88,8 @@ export const App: React.FC = () => {
   useEffect(() => {
     const ctx = getContext(saturationSpectrumCanvas);
 
-    for (let x = 0; x < 100; x++) {
-      ctx.fillStyle = hsluvToHex([hue, x, light]);
+    for (let x = 0; x < spectrumWidth; x++) {
+      ctx.fillStyle = hsluvToHex([hue, x * (100 / spectrumWidth), light]);
       ctx.fillRect(x, 0, 1, spectrumHeight);
     }
 
@@ -114,6 +119,13 @@ export const App: React.FC = () => {
   const pointingRgb = useMemo(() => {
     return hsluvToHex([hue, saturation, light]);
   }, [hue, saturation, light]);
+
+  const handleChangeHue = useCallback(value => {
+    setHue(value * 360);
+  }, []);
+  const handleChangeSaturation = useCallback(value => {
+    setSaturation(value * 100);
+  }, []);
 
   return (
     <>
@@ -176,10 +188,11 @@ export const App: React.FC = () => {
           Hue
         </p>
         <Spectrum
+          width={spectrumWidth}
           anchorRef={hueSpectrumCanvas}
-          defaultValue={hue}
+          defaultValue={hue / 360}
           height={spectrumHeight}
-          onChange={setHue}
+          onChange={handleChangeHue}
         />
         <p>{hue}</p>
       </div>
@@ -197,10 +210,11 @@ export const App: React.FC = () => {
           Saturation
         </p>
         <Spectrum
+          width={spectrumWidth}
           anchorRef={saturationSpectrumCanvas}
-          defaultValue={saturation}
+          defaultValue={saturation / 100}
           height={spectrumHeight}
-          onChange={setSaturation}
+          onChange={handleChangeSaturation}
         />
         <p>{saturation}</p>
       </div>
